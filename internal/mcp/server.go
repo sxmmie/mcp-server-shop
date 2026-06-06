@@ -114,3 +114,7 @@ func (s *Server) handleToolsCall(params json.RawMessage) (interface{}, error) {
 
 	return result, nil
 }
+
+func (s *Server) Start() error {
+	return s.rpcServer.ServeStdio()
+}
