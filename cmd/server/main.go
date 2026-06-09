@@ -5,7 +5,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/sxmmie/mcp-server-shop/configs"
+	"github.com/sxmmie/mcp-server-shop/internal/client"
 	"github.com/sxmmie/mcp-server-shop/internal/mcp"
+	"github.com/sxmmie/mcp-server-shop/internal/tools/products"
 )
 
 func main() {
@@ -34,9 +36,11 @@ func main() {
 	}).Info("Starting MCP E-Commerce Server")
 
 	// create HTTP client
-	// restClient := client.NewRestyClient(config.APIURL, config.AuthToken, logger)
+	restClient := client.NewRestyClient(config.APIURL, config.AuthToken, logger)
 
 	toolRegistry := mcp.NewRegistry(logger)
+
+	products.NewProductToolset(nil, logger, restClient)
 
 	logger.WithField("tool_count", len(toolRegistry.ListTools())).Info("Registered tools")
 
