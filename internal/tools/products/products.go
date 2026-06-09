@@ -3,6 +3,7 @@ package products
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/sirupsen/logrus"
@@ -82,6 +83,47 @@ func (r *ProductToolset) registerProductTools() {
 			Required: []string{},
 		},
 	}, r.searchProducts)
+
+	r.reg.Register(mcp.Tool{
+		Name:        "get_products_details",
+		Description: "Get detailed information about a specific product by its ID",
+		InputSchema: mcp.InputSchema{
+			Type: "object",
+			Properties: map[string]mcp.Property{
+				"product_id": {
+					Type:        "string",
+					Description: "The unique identifier of the products",
+				},
+			},
+			Required: []string{"product_id"},
+		},
+	}, r.getProductDetails)
+}
+
+func (r *ProductToolset) getProductDetails(_ context.Context, args map[string]any) (mcp.CallToolResult, error) {
+	productID, ok := args["product_id"].(string)
+	if !ok || productID == "" {
+		return mcp.CallToolResult{}, errors.New("product_id is required and must be a string of numbers. eg 123")
+	}
+
+	response, err := r.restClient.Get(fmt.Sprintf("/products/%s", productID), nil)
+	if err != nil {
+		return mcp.CallToolResult{}, fmt.Errorf("failed to fetch product details: %w", err)
+	}
+
+	var product ProductDetailResponse
+	if err := json.Unmarshal(response, &product); err != nil {
+		return mcp.CallToolResult{}, fmt.Errorf("failed to parse product detail data: %w", err)
+	}
+
+	return mcp.CallToolResult{
+		Content: []mcp.Content{
+			{
+				Type: "text",
+				Text: formatProductDetail(product.Data),
+			},
+		},
+	}, nil
 }
 
 func (r *ProductToolset) searchProducts(_ context.Context, args map[string]any) (mcp.CallToolResult, error) {
@@ -184,5 +226,16 @@ func formatProduct(product Product) string {
 	price := product.Price
 	id := product.Id
 
-	return fmt.Sprintf("**%s** (ID: %d) - $%.2f", name, price, id)
+	return fmt.Sprintf("**%s** (ID: %d) - $%.2f", name, id, price)
+}
+
+func formatProductDetail(product Product) string {
+	return fmt.Sprintf(`**Product Detail**
+ID: %d
+Name: %s
+Price: $%.2f
+Stock: %d units
+
+Description: %s
+`, product.Id, product.Name, product.Price, product.Stock, product.Description)
 }
