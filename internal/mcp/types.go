@@ -61,7 +61,7 @@ type Tool struct {
 type InputSchema struct {
 	Type       string              `json:"type"`
 	Properties map[string]Property `json:"properties"`
-	Reqired    []string            `json:"required,omitempty"`
+	Required   []string            `json:"required,omitempty"`
 }
 
 type Property struct {
