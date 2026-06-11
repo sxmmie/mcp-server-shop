@@ -8,6 +8,7 @@ import (
 	"github.com/sxmmie/mcp-server-shop/internal/client"
 	"github.com/sxmmie/mcp-server-shop/internal/mcp"
 	"github.com/sxmmie/mcp-server-shop/internal/tools/cart"
+	"github.com/sxmmie/mcp-server-shop/internal/tools/orders"
 	"github.com/sxmmie/mcp-server-shop/internal/tools/products"
 )
 
@@ -43,6 +44,7 @@ func main() {
 
 	products.NewProductToolset(nil, logger, restClient)
 	cart.NewCartToolset(toolRegistry, logger, restClient)
+	orders.NewOrderToolset(toolRegistry, logger, restClient)
 
 	logger.WithField("tool_count", len(toolRegistry.ListTools())).Info("Registered tools")
 
