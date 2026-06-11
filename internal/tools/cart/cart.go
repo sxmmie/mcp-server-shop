@@ -56,7 +56,7 @@ func (c *CartToolset) registerCartTools() {
 			Properties: map[string]mcp.Property{},
 			Required:   []string{},
 		},
-	}, c.handleVIewCart)
+	}, c.handleViewCart)
 }
 
 func (c *CartToolset) handleAddToCart(ctx context.Context, args map[string]any) (mcp.CallToolResult, error) {
@@ -115,4 +115,48 @@ func (c *CartToolset) handleAddToCart(ctx context.Context, args map[string]any) 
 	}, nil
 }
 
-func (c *CartToolset) handleVIewCart() {}
+func (c *CartToolset) handleViewCart(_ context.Context, args map[string]any) (mcp.CallToolResult, error) {
+	c.logger.WithField("args", args).Info("Viewing cart")
+
+	response, err := c.restClient.WithToken().Get("/cart", nil)
+	if err != nil {
+		return mcp.CallToolResult{}, fmt.Errorf("fialed to fetch cart: %w", err)
+	}
+
+	c.logger.WithField("response", string(response)).Info("Fetched cart")
+
+	var cart ViewCartResponse
+	if err := json.Unmarshal(response, &cart); err != nil {
+		return mcp.CallToolResult{}, fmt.Errorf("failed to parse cart: %w", err)
+	}
+
+	if len(cart.Data.CartItems) == 0 {
+		return mcp.CallToolResult{
+			Content: []mcp.Content{
+				{
+					Type: "text",
+					Text: "Your cart is empty",
+				},
+			},
+		}, nil
+	}
+
+	// loop over cart items and concatenate the data we want to return
+	resultText := fmt.Sprintf("Shopping cart (%d items):\n\n", len(cart.Data.CartItems))
+	for i, item := range cart.Data.CartItems {
+		resultText += fmt.Sprintf("%d. %s - $%.2f * %d = $%.2f\n", i+1, item.Product.Name, item.Product.Price, item.Quantity, item.SubTotal)
+	}
+
+	// Add the total
+	resultText += fmt.Sprintf("\n Total:", cart.Data.Total)
+
+	// return the data
+	return mcp.CallToolResult{
+		Content: []mcp.Content{
+			{
+				Type: "text",
+				Text: resultText,
+			},
+		},
+	}, nil
+}
