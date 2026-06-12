@@ -127,10 +127,10 @@ func (r *ProductToolset) getProductDetails(_ context.Context, args map[string]an
 }
 
 func (r *ProductToolset) searchProducts(_ context.Context, args map[string]any) (mcp.CallToolResult, error) {
-	p, _ := args["q"].(string)
+	q, _ := args["q"].(string)
 	minPrice, _ := args["min_price"].(float64)
 	maxPrice, _ := args["max_price"].(float64)
-	category_id, _ := args["category_id"].(string)
+	categoryId, _ := args["category_id"].(string)
 
 	limit := 20
 	offset := 0
@@ -143,12 +143,21 @@ func (r *ProductToolset) searchProducts(_ context.Context, args map[string]any) 
 		offset = int(o)
 	}
 	params := map[string]string{
-		"limit":       fmt.Sprintf("%d", limit),
-		"offset":      fmt.Sprintf("%d", offset),
-		"q":           p,
-		"min_price":   fmt.Sprintf("%.2f", minPrice),
-		"max_price":   fmt.Sprintf("%.2f", maxPrice),
-		"category_id": category_id,
+		"limit":  fmt.Sprintf("%d", limit),
+		"offset": fmt.Sprintf("%d", offset),
+		"q":      q,
+	}
+
+	if minPrice > 0 {
+		params["min_price"] = fmt.Sprintf("%.2f", minPrice)
+	}
+
+	if maxPrice > 0 {
+		params["max_price"] = fmt.Sprintf("%.2f", maxPrice)
+	}
+
+	if categoryId != "" {
+		params["category"] = categoryId
 	}
 
 	response, err := r.restClient.Get("/search", params)
