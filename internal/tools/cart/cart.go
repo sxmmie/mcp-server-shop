@@ -131,14 +131,7 @@ func (c *CartToolset) handleViewCart(_ context.Context, args map[string]any) (mc
 	}
 
 	if len(cart.Data.CartItems) == 0 {
-		return mcp.CallToolResult{
-			Content: []mcp.Content{
-				{
-					Type: "text",
-					Text: "Your cart is empty",
-				},
-			},
-		}, nil
+		return mcp.NewToolCallError("Your cart is empty"), nil
 	}
 
 	// loop over cart items and concatenate the data we want to return
